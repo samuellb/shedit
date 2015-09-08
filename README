@@ -1,0 +1,81 @@
+About "shEdit"
+--------------
+shEdit is a minimal text editor written in POSIX shell. It's inspired by the
+GNU Nano editor, but is even more minimalistic. I created it mostly for "fun",
+but it could be useful in situations where you can't use your favorite text
+editor, for instance:
+
+ * If you need to use some system where no sane text editors are installed
+   (or perhaps, you really don't like "vi").
+ * Special constrained environments such as an over a serial line or in an
+   initramfs/initrd, where a normal editor might not work properly.
+ * If you need a minimalistic portable text editor.
+
+Current status and bugs
+-----------------------
+Not everything is working yet:
+
+ * Long lines can't be displayed properly and will usually be truncated.
+ * No UTF-8 support.
+ * Search does not work.
+ * No word navigation.
+ * Lines containing capital letter U with circumflex gets filtered due to a
+   bug (technically, this happens because it contains the escape character
+   0x9B in it's UTF-8 encoding).
+ * No save or overwrite prompt (currently, files can't be overwritten)
+
+Limitations of shell script
+---------------------------
+shEdit uses shell variables named file_row1, file_row2, and so on to store the
+text buffer. This is of course not very efficient for files with many lines, or
+when a line is inserted or deleted in the middle of the file. The latter
+can be improved to some degree, by deferring the insertion or removal of
+off-screen lines, so multiple lines can be "moved" at once.
+
+Some shells or systems may additionally impose limits on the number or total
+size of variables, so that will limit the size of the files you can edit with
+shEdit. Additionally, shell variables generally don't allow null bytes, so
+don't try to edit binary files! (Also, shEdit will strip escape characters,
+but that's a limiation of shEdit and not of the shell)
+
+Also, proper UTF-8 support will require special handling for different shells.
+Most shells simply treat strings as byte arrays (which is much more flexible).
+But Bash 4 and later treats multibyte characters as single units, so it will
+need special handling when adding UTF-8 support.
+
+Finally, there's no standard way of reading a single key store in POSIX shell,
+and you can't turn off character echo either. So shEdit will try to use
+external commands for this.
+
+System requirements
+-------------------
+As long as you only edit small files it shouldn't require much of your system.
+The software requirements are:
+
+ - sh (POSIX compatible, tested with dash, bash, zsh, ksh, ksh93, mksh)
+ - dd (or head. not required under bash)
+ - Linux console or xterm-like terminal (might work under other VT100
+   terminals as well)
+
+It's also very much recommended to have "stty" installed. Otherwise, key
+strokes will be line buffered, so you'll have to press ENTER after to actually
+send your key strokes to shEdit (but shEdit has been tested to work in this
+mode also). Without stty, shEdit will also assume that the terminal size is
+80x24.
+
+In line buffered mode ("broken input mode"), you may not be able to use
+all Ctrl-<key> commands. Instead you may press ESC ^ <key> (where ^ is the
+circumflex/caret character).
+
+shEdit doesn't use terminfo, and uses hard-coded escape sequences instead.
+So it might not work on all terminals, but it has been tested to work on
+lxterminal, xterm and Linux console.
+
+Warning
+-------
+This script uses eval to read files. If there would be a bug in this code then
+this could lead to a security issue. It could also trigger the "Bash bug", I
+guess, if a line starts with (). Also, not all escape sequences are cleaned
+before displaying the text on the terminal.
+
+
