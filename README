@@ -32,11 +32,11 @@ when a line is inserted or deleted in the middle of the file. The latter
 can be improved to some degree, by deferring the insertion or removal of
 off-screen lines, so multiple lines can be "moved" at once.
 
-Some shells or systems may additionally impose limits on the number or total
+Some shells or systems may impose limits on the number or total
 size of variables, so that will limit the size of the files you can edit with
 shEdit. Additionally, shell variables generally don't allow null bytes, so
 don't try to edit binary files! (Also, shEdit will strip escape characters,
-but that's a limiation of shEdit and not of the shell)
+but that's a limitation of shEdit and not of the shell)
 
 Also, proper UTF-8 support will require special handling for different shells.
 Most shells simply treat strings as byte arrays (which is much more flexible).

@@ -34,6 +34,8 @@
 # TODO use local variables? is it part of a standard and does it work with bash, zsh, mksh, ksh etc?
 # TODO double check the Emacs keys
 # TODO filter out control characters and special unicode whitespace characters (is that really needed?) when displaying lines
+# TODO "bad input mode" does not work with 1) backspace 2) moving between lines or redrawing the screen (causes lines to be offset by one line or so)
+# TODO fix screen resize when prompt or help screen is open
 
 sheditver=0.0.1
 
