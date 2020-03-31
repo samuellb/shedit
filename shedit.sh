@@ -118,23 +118,23 @@ readonly saved_stty="$(stty -g)"
 initialized=0
 init() {
     stty -ixon -ixoff -echo -icanon min 1 time 0 && bad_input_mode=0
-    
+
     # Terminal initialization
-    printf "\033[?1049h"
+    printf '\033[?1049h'
 
     # Reset misc. stuff
-    printf "\033[0m\033(B\033[?25h"
+    printf '\033[0m\033(B\033[?25h'
 
     # Disable auto-wrap
-    printf "\033[?7l"
-    
+    printf '\033[?7l'
+
     # Bracketed paste
-    #printf "\033[?2004h"
-    
+    #printf '\033[?2004h'
+
     # Clear screen
-    printf "\033[3J" # including scroll back
-    printf "\033[2J" # if the above fails
-    
+    printf '\033[3J' # including scroll back
+    printf '\033[2J' # if the above fails
+
     initialized=1
     resized
 }
@@ -143,21 +143,21 @@ cleanup() {
     # Go to the last line, in case the terminal doesn't restore the screen contents
 #    printf '\033['$((rows - 1))';1H\033[2K\n\033[2K'    # XXX create more problems than it solves in other terminal emulators, e.g. tmux
 #    printf '\033['$((rows - 3))';1H'    # XXX create more problems than it solves in other terminal emulators, e.g. tmux
-#    printf "\033[${rows};1H\n"
+#    printf "\\033[${rows};1H\\n"
 #    sleep 0.5  # for debugging
-    
+
     # Enable auto-wrap
-    printf "\033[?7h"
-    
+    printf '\033[?7h'
+
     # Bracketed paste
-    #printf "\033[?2004l"
-    
+    #printf '\033[?2004l'
+
     # Reset misc. stuff
-    printf "\033[0m\033(B\033[?25h"
-    
+    printf '\033[0m\033(B\033[?25h'
+
     # Terminal de-initialization
-    printf "\033[?1049l\015"
-    
+    printf '\033[?1049l\015'
+
     stty "$saved_stty"
 }
 
@@ -169,7 +169,7 @@ getwinsize() {
         # FIXME probably not very reliable
         stty -a | while read -r a b c d e f g rest; do
             if [ "$d" = rows ] && [ "$e" -gt 5 ] && [ "$f" = columns ] && [ "$g" -gt 5 ]; then
-                echo $e $g
+                echo "$e" "$g"
                 break
             fi
         done || true
@@ -198,11 +198,11 @@ refresh() {
     printf '\033[0m\033[2J\033[1;1H'
     # Display the file contents from current_row
     i=1
-    while [ $i -lt $rows ]; do
+    while [ $i -lt "$rows" ]; do
         # TODO truncate long lines (try $# first, then dd)
         # TODO use a distinct line number for scrolling?
         filerow=$((current_top_row + i - 1))
-        if [ $filerow -gt $file_rows ]; then
+        if [ $filerow -gt "$file_rows" ]; then
             row_result=""
         else
             getrow $filerow
@@ -210,7 +210,7 @@ refresh() {
         printf '%s\n' "$row_result"
         i=$((i + 1))
     done
-    
+
     # Refresh status line
     refresh_status
 }
@@ -218,7 +218,7 @@ refresh() {
 update_cursor() {
     screen_row=$((current_row - current_top_row + 1))
     screen_col=$current_col # TODO
-    printf '\033['$screen_row';'$screen_col'H'
+    printf '\033[%d;%dH' "$screen_row" "$screen_col"
 }
 
 refresh_status() {
@@ -235,7 +235,7 @@ refresh_status() {
         filename="$file_filename"
     fi
     if [ -n "$status_error" ]; then
-        extra="\033[1m$status_error\033[0m"
+        extra="\\033[1m$status_error\\033[0m"
     elif [ $bad_input_mode = 1 ]; then
         extra="Must press ENTER after keystrokes! ^G:Help"
     else
@@ -243,16 +243,16 @@ refresh_status() {
     fi
     # TODO truncate the filename from the left
     #      or just display the basename (but that's an external command!)
-    printf "\033[${rows};1H\033[7m\033[2K%s%19.19s | L%4d, C%4d | $extra" "$dirty" "$filename" $current_row $current_col
-    
+    printf '\033[%d;1H\033[7m\033[2K%s%19.19s | L%4d, C%4d | '"$extra" "$rows" "$dirty" "$filename" "$current_row" "$current_col"
+
     # Move cursor to the correct row/column
     update_cursor
 }
 
 refresh_line() {
     row=$((current_row - current_top_row + 1))
-    printf '\033['$row';1H\033[0m\033[2K'
-    getrow $current_row
+    printf '\033[%d;1H\033[0m\033[2K' "$row"
+    getrow "$current_row"
     printf '%s\n' "$row_result"
 }
 
@@ -261,16 +261,16 @@ wipe_clean_line() {
     # characters that where actually overwritten.
     trash_text_row=$((trash_row + current_top_row - 1))
     printf '\033['$trash_row';1H\033[0m\033[2K'
-    getrow $trash_text_row
+    getrow "$trash_text_row"
     printf '%s\n' "$row_result"
     update_cursor
 }
 
 help_screen() {
     printf '\033[0m\033[2J\033[1;1H'
-    
+
     echo ""
-    printf "     ----[ shEDit Help ]---- v. %-6s- (C) 2015 Samuel Liden Borell ----\n" "$sheditver"
+    printf '     ----[ shEDit Help ]---- v. %-6s- (C) 2015 Samuel Liden Borell ----\n' "$sheditver"
     if [ $bad_input_mode = 1 ]; then
         echo '     *NOTE* You are in "bad input mode" (due to missing stty command)'
         echo '     You must press ENTER after typing in commands or characters'
@@ -278,7 +278,7 @@ help_screen() {
         echo ""
         echo "                          Available keyboard commands:"
     fi
-    
+
     cat <<EOF
 
      +----------------------+----------------------+--------------------+
@@ -299,35 +299,35 @@ help_screen() {
      |                                             |                    |
      +---------------------------------------------+--------------------+
 EOF
-    
-    printf "\033[${rows};1H\033[7m\033[2K Press ENTER to exit help                           http://shedit.kodafritt.se/"
+
+    printf '\033[%d;1H\033[7m\033[2K Press ENTER to exit help                           http://shedit.kodafritt.se/' "$rows"
 
     if [ $bad_input_mode = 1 ]; then
         readcmd | true # because we have an enter key press in the buffer already
     fi
     while true; do
         cmd="$(readcmd)"
-        if [ "$cmd" = linefeed -o "$cmd" = esc_esc ]; then
+        if [ "$cmd" = linefeed ] || [ "$cmd" = esc_esc ]; then
             break
         fi
     done
 }
 
 refresh_inputline() {
-    printf "\033[${rows};13H\033[0m\033[K%s\033[${rows};%s" "$input_reply" $((12 + col))H
+    printf '\033[%d;13H\033[0m\033[K%s\033[%d;%dH' "$rows" "$input_reply" "$rows" $((12 + col))
 }
 
 readinput() {
     prompt=$1
-    printf "\033[${rows};1H\033[7m\033[2K%10s: \033[0m" "$prompt"
-    
+    printf '\033[%d;1H\033[7m\033[2K%10s: \033[0m' "$rows" "$prompt"
+
     input_responded=0
     if [ $bad_input_mode = 1 ]; then
-        read input_reply
+        read -r input_reply
         # perhaps the user pressed enter directly after the command
         # (which is needed to get a visible prompt in "bad input mode")
         if [ -z "$input_reply" ]; then
-            read input_reply
+            read -r input_reply
         fi
         input_responded=1
         refresh # screen will have scrolled now!
@@ -488,14 +488,13 @@ dumptext() {
 savefile() {
     filename=$1
     overwrite=$2
-    
-    if [ $overwrite = 1 ]; then
+
+    if [ "$overwrite" = 1 ]; then
         set +o noclobber
     else
         set -o noclobber
     fi
     i=1
-    ok=0
     save_err=$(dumptext "$filename" 2>&1 || echo .;)
     # Strip script file name
     save_err=${save_err##*:}
@@ -507,7 +506,7 @@ EOF
     if [ -n "$save_err" ]; then
         return 1
     fi
-    
+
     file_filename=$filename
     return 0
 }
@@ -589,7 +588,7 @@ cmd_write() {
         return
     fi
     filename=$input_reply
-    
+
     # Check if the name was changed
     if [ "$filename" != "$file_filename" ]; then
         # Prompt when the name is changed
@@ -598,10 +597,10 @@ cmd_write() {
     else
         overwrite=1
     fi
-    
+
     # Save the file
     if ! savefile "$filename" $overwrite; then
-        if [ $overwrite = 0  -a  -e "$filename" ]; then
+        if [ $overwrite = 0 ] && [ -e "$filename" ]; then
             # Prompt for overwrite
             # TODO
             return
@@ -618,7 +617,7 @@ cmd_write() {
 cmd_read() {
     status_error=""
     readinput "Read file" "$file_filename"
-    if [ $input_responded = 1  -a  -n "$input_reply" ]; then
+    if [ $input_responded = 1 ] && [ -n "$input_reply" ]; then
         # TODO should also be able to insert a file into the current buffer also
         loadfile "$input_reply"
         refresh
@@ -842,7 +841,7 @@ deletestr() {
 insertline() {
     rownum=$1
     contents=$2
-    
+
     # TODO need some way of defer insertion of lines for efficiency.
     #      perhaps only update the lines that are visible on the screen, and then extend the set of updated lines when other parts of the file becomes visible
     # alternatively, all lines could be given a sequential number, with next/prev variables. there should also be a pointer table of perhaps every 10 lines for fast lookups
@@ -853,14 +852,14 @@ insertline() {
         i=$((i - 1))
     done
     file_rows=$((file_rows + 1))
-    
+
     setrow $rownum "$2"
 }
 
 deleteline() {
     rownum=$1  # this is the line after the line to delete
-    contents=$2
-    
+#    contents=$2
+
     # TODO just like with insertline, we need some way of defer delete of lines for efficiency.
     i=$((rownum + 2))
     while [ $i -le $file_rows ]; do
@@ -870,7 +869,7 @@ deleteline() {
     done
     eval 'unset line_'$file_rows
     file_rows=$((file_rows - 1))
-    
+
     setrow $rownum "$2"
 }
 
@@ -971,7 +970,7 @@ cmd_insert_enter() {
     strend $current_col "$current_linetext"
     end=$str_result
     setrow $current_row "$start"
-    
+
     current_row=$((current_row+1))
     insertline $current_row "$end"
     current_linetext=$end
@@ -979,7 +978,7 @@ cmd_insert_enter() {
     current_col=1
     current_lastcol=$current_col
     unset str_result start end
-    
+
     scroll_if_needed || true
     # TODO do something more efficient
     refresh
@@ -1002,12 +1001,12 @@ cmd_insert_byte() {
 
 getchars() {
     if [ $use_bash_read = 1 ]; then
-        read -s -N $1 ch
+        read -r -s -N "$1" ch
         printf %s "$ch"
     elif [ $use_head = 1 ]; then
-        head -c $1
+        head -c "$1"
     else
-        dd bs=$1 count=1 status=none
+        dd bs="$1" count=1 status=none
     fi
     #head -c $1
     # | hd -v -e '/1 "%02X "'
@@ -1015,7 +1014,7 @@ getchars() {
 
 getmodname() {
     case "$1" in
-        2) modname=shift;;
+        2) modname='shift';;
         3) modname=alt;;
         4) modname=alt_shift;;
         5) modname=ctrl;;
@@ -1138,7 +1137,7 @@ readesc() {
             29~) echo shift_f4;;
             31~) echo shift_f5;;
             32~) echo shift_f6;;
-            23~) echo shift_f7;;
+            33~) echo shift_f7;;
             34~) echo shift_f8;;
             "[")
                 d="$(getchars 1)"
@@ -1198,7 +1197,7 @@ readesc() {
             *) kbd_error "unknown ^[[ escape $c";;
         esac
         ;;
-    0|1|2|3|4|5|6|7|8|9|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z) echo alt_$b;;
+    0|1|2|3|4|5|6|7|8|9|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z) echo "alt_$b";;
     "'") echo alt_singlequote;; #X
     "$char7f") echo alt_backspace;;
     "$esc") echo esc_esc;;
@@ -1214,7 +1213,7 @@ readesc() {
         # Manual entry of Ctrl-<key>, in case the stty command is not available
         c="$(getchars 1)"
         case "$c" in
-            0|1|2|3|4|5|6|7|8|9|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z) echo ctrl_$c;;
+            0|1|2|3|4|5|6|7|8|9|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z) echo "ctrl_$c";;
         esac
         ;;
     *)
@@ -1230,11 +1229,11 @@ readesc() {
 
 readmbchar() {
     keycode=$(printf %d "'$1")
-    if [ $keycode -ge 192  -a  $keycode -lt 224 ]; then
+    if [ "$keycode" -ge 192 ] && [ "$keycode" -lt 224 ]; then
         utf8len=2
-    elif [ $keycode -ge 224  -a  $keycode -lt 240 ]; then
+    elif [ "$keycode" -ge 224 ] && [ "$keycode" -lt 240 ]; then
         utf8len=3
-    elif [ $keycode -ge 240  -a  $keycode -lt 248 ]; then
+    elif [ "$keycode" -ge 240 ] && [ "$keycode" -lt 248 ]; then
         utf8len=4
     else
         # Single-byte character
@@ -1290,7 +1289,7 @@ readcmd() {
 
 while true; do
     cmd="$(readcmd)"
-    if [ $bad_input_mode = 1 -a "$cmd" = linefeed ]; then
+    if [ $bad_input_mode = 1 ] && [ "$cmd" = linefeed ]; then
         # In "bad input mode" keys are echoed and one has to press enter
         # to actually "send" a series of key presses to the editor
         wipe_clean_line
